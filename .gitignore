@@ -1,0 +1,82 @@
+# General
+#########################
+# Operating System generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE / Editor specific files
+.idea/
+.vscode/       # VS Code directory
+# .vscode/launch.json # Uncomment if you want to ignore specific launch configurations
+# .vscode/settings.json # Uncomment if you want to ignore specific workspace settings
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw? # Vim swap files
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.old
+
+# Log files (general, might also be in backend/logs)
+*.log
+*.log.[0-9] # For rotated logs like combined.log.1
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Backend Specific (Node.js)
+#########################
+backend/node_modules/
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+# backend/package-lock.json # Optional: See note below
+
+# Environment Variables for Backend (CRITICAL)
+backend/.env
+backend/.env.*
+!backend/.env.example # Allow committing an example .env file for the backend
+
+# Backend generated files and uploads
+backend/generated/
+backend/uploads/
+backend/logs/ # If logs are specifically in backend/logs
+
+# Frontend Specific (if applicable, e.g., if frontend becomes more complex)
+#########################
+# If frontend uses its own package manager
+# frontend/node_modules/
+# frontend/package-lock.json
+# frontend/yarn.lock
+
+# If frontend has a build step (e.g., React, Vue, Angular)
+# frontend/dist/
+# frontend/build/
+# frontend/.env # If frontend has its own .env file
+# frontend/.env.*
+# !frontend/.env.example
+
+# Other common ignores
+#########################
+# Archives
+*.tar
+*.gz
+*.zip
+*.rar
+
+# Compiled files (if you use compiled languages elsewhere)
+# *.o
+# *.exe
+# *.dll
+# *.class

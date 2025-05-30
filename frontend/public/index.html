@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Video Genesis</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Animated Background */
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(circle at 25% 25%, #1e0a3e 0%, transparent 50%),
+                        radial-gradient(circle at 75% 75%, #0a1e3e 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, #1a0033 0%, transparent 70%),
+                        linear-gradient(135deg, #0a0a0f 0%, #1a0d2e 50%, #0f0a1a 100%);
+        }
+        
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(45deg, #00d4ff, #9d00ff);
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: float 8s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+        
+        /* Neural Network Grid */
+        .neural-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(157, 0, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridPulse 4s infinite ease-in-out;
+            z-index: -1;
+        }
+        
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00d4ff 0%, #9d00ff 50%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            animation: logoGlow 3s infinite ease-in-out;
+        }
+        
+        @keyframes logoGlow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5)); }
+            50% { filter: drop-shadow(0 0 30px rgba(157, 0, 255, 0.8)); }
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            color: #a0a8b8;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        
+        /* Main Interface */
+        .main-interface {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Prompt Section */
+        .prompt-section {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .prompt-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00d4ff, #9d00ff, transparent);
+            animation: borderScan 3s infinite;
+        }
+        
+        @keyframes borderScan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(45deg, #00d4ff, #9d00ff);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: iconPulse 2s infinite;
+        }
+        
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .prompt-input {
+            width: 100%;
+            min-height: 120px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+        
+        .prompt-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        .prompt-input::placeholder {
+            color: #6b7280;
+        }
+        
+        /* Controls Panel */
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            height: fit-content;
+        }
+        
+        .control-group {
+            margin-bottom: 2rem;
+        }
+        
+        .control-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #9d00ff;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .slider-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #00d4ff, #9d00ff);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+         .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #00d4ff, #9d00ff);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .slider-value {
+            position: absolute;
+            right: 0;
+            top: -25px;
+            color: #00d4ff;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .dropdown {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(157, 0, 255, 0.3);
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+             -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300D4FF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 0.65em auto;
+            padding-right: 2.5rem; /* Make space for arrow */
+        }
+        
+        .dropdown:focus {
+            outline: none;
+            border-color: #9d00ff;
+            box-shadow: 0 0 15px rgba(157, 0, 255, 0.3);
+        }
+        
+        /* Generate Button */
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #00d4ff 0%, #9d00ff 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+         .generate-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .generate-btn:disabled::before {
+            display:none;
+        }
+        
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .generate-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+        
+        .generate-btn:not(:disabled):hover::before {
+            left: 100%;
+        }
+        
+        .generate-btn:not(:disabled):active {
+            transform: translateY(0);
+        }
+        
+        /* Progress Section */
+        .progress-section {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            display: none; /* Initially hidden */
+        }
+        
+        .progress-section.active {
+            display: block;
+        }
+        
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+        
+        .progress-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill { /* This is the spinning part */
+            position: absolute;
+            top: -2px; /* Adjust for border */
+            left: -2px; /* Adjust for border */
+            width: calc(100% + 4px); /* Adjust for border */
+            height: calc(100% + 4px); /* Adjust for border */
+            border: 4px solid transparent;
+            border-top-color: #00d4ff;
+            border-left-color: #00d4ff; /* For a fuller look */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .progress-bar-container {
+            width: 80%;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 1rem auto;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 0%; /* Controlled by JS */
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #9d00ff);
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-text {
+            font-size: 1.1rem;
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-subtitle {
+            font-size: 0.9rem;
+            color: #a0a8b8;
+        }
+        
+        /* Results Section */
+        .results-section {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none; /* Initially hidden */
+        }
+        
+        .results-section.active {
+            display: block;
+        }
+        
+        .video-preview {
+            width: 100%;
+            /* aspect-ratio: 16 / 9; */ /* Maintain aspect ratio */
+            height: 400px; /* Or set a fixed height */
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden; /* Ensure video fits */
+        }
+        
+        .video-preview video {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 14px; /* Slightly less than container */
+        }
+
+        .video-placeholder {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none; /* For download link */
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-interface {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .controls-panel {
+                order: -1; /* Controls panel first on smaller screens */
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .logo {
+                font-size: 2.2rem;
+            }
+            
+            .prompt-section,
+            .controls-panel,
+            .progress-section,
+            .results-section {
+                padding: 1.5rem;
+            }
+            .main-interface {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container"></div>
+    <div class="neural-grid"></div>
+    <div class="floating-particles"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">NEURAL VIDEO GENESIS</h1>
+            <p class="tagline">Transform imagination into reality</p>
+        </header>
+        
+        <div class="main-interface">
+            <div class="prompt-section">
+                <h2 class="section-title">
+                    <div class="section-icon">✨</div>
+                    Creative Prompt
+                </h2>
+                <textarea 
+                    id="promptInput"
+                    class="prompt-input" 
+                    placeholder="Describe your vision in vivid detail... A majestic dragon soaring through clouds of stardust, its scales shimmering with ethereal light as it breathes cosmic fire across an alien landscape..."
+                ></textarea>
+            </div>
+            
+            <div class="controls-panel">
+                <h2 class="section-title">
+                    <div class="section-icon">⚡</div>
+                    Neural Parameters
+                </h2>
+                
+                <div class="control-group">
+                    <label class="control-label">Model</label>
+                    <select id="modelSelect" class="dropdown">
+                        <option value="zeroscope">Zeroscope v2 XL (Quality)</option>
+                        <option value="modelscope">ModelScope (Fast)</option>
+                        <!-- <option value="cogvideo">CogVideo (Stylized 4s)</option> -->
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Duration</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" min="2" max="30" value="5" id="duration">
+                        <span class="slider-value">5s</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Quality</label>
+                    <select id="qualitySelect" class="dropdown">
+                        <option value="1080p">High Definition (1080p)</option>
+                        <option value="720p">Standard (720p)</option>
+                        <option value="480p">Fast Preview (480p)</option>
+                        <!-- <option value="4K">Ultra HD (4K)</option> -->
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Style Intensity</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" min="1" max="10" value="7" id="intensity">
+                        <span class="slider-value">7</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Frame Rate</label>
+                    <select id="frameRateSelect" class="dropdown">
+                        <option value="30">30 FPS (Standard)</option>
+                        <option value="24">24 FPS (Film)</option>
+                        <option value="15">15 FPS (Smoother Preview)</option>
+                        <!-- <option value="60">60 FPS (Cinematic)</option> -->
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Motion Dynamics</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" min="1" max="10" value="5" id="motion">
+                        <span class="slider-value">5</span>
+                    </div>
+                </div>
+                
+                <button class="generate-btn" id="generateBtn">
+                    Initialize Genesis
+                </button>
+            </div>
+        </div>
+        
+        <div class="progress-section" id="progressSection">
+            <h2 class="section-title">
+                <div class="section-icon">🧠</div>
+                Neural Processing
+            </h2>
+            <div class="progress-ring">
+                <div class="progress-circle">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Materializing your vision...</div>
+            <div class="progress-subtitle" id="progressSubtitle">Neural networks are weaving reality from imagination</div>
+        </div>
+        
+        <div class="results-section" id="resultsSection">
+            <h2 class="section-title">
+                <div class="section-icon">🎬</div>
+                Generated Masterpiece
+            </h2>
+            <div class="video-preview" id="videoPreview">
+                <div class="video-placeholder" id="videoPlaceholder">Your generated video will appear here</div>
+            </div>
+            <div class="action-buttons">
+                <a href="#" class="action-btn" id="downloadBtn" download style="display:none;">Download Video</a>
+                <button class="action-btn" id="shareBtn" style="display:none;">Share Creation</button>
+                <button class="action-btn" id="refineBtn" style="display:none;">Refine & Iterate</button>
+                <button class="action-btn" id="newGenesisBtn">New Genesis</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let currentJobId = null;
+        let pollingInterval = null;
+
+        // DOM Elements
+        const promptInput = document.getElementById('promptInput');
+        const modelSelect = document.getElementById('modelSelect');
+        const durationSlider = document.getElementById('duration');
+        const qualitySelect = document.getElementById('qualitySelect');
+        const intensitySlider = document.getElementById('intensity');
+        const frameRateSelect = document.getElementById('frameRateSelect');
+        const motionSlider = document.getElementById('motion');
+        const generateBtn = document.getElementById('generateBtn');
+        
+        const mainInterface = document.querySelector('.main-interface');
+        const progressSection = document.getElementById('progressSection');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressText = document.getElementById('progressText');
+        const progressSubtitle = document.getElementById('progressSubtitle');
+        
+        const resultsSection = document.getElementById('resultsSection');
+        const videoPreview = document.getElementById('videoPreview');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const shareBtn = document.getElementById('shareBtn'); // Placeholder
+        const refineBtn = document.getElementById('refineBtn'); // Placeholder
+        const newGenesisBtn = document.getElementById('newGenesisBtn');
+
+        // Create floating particles
+        function createParticles() {
+            const container = document.querySelector('.floating-particles');
+            if (!container) return;
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                container.appendChild(particle);
+            }
+        }
+        
+        // Update slider values
+        function setupSliders() {
+            const sliders = document.querySelectorAll('.slider');
+            sliders.forEach(slider => {
+                const valueDisplay = slider.parentElement.querySelector('.slider-value');
+                if (!valueDisplay) return;
+
+                const updateDisplay = () => {
+                    let value = slider.value;
+                    let suffix = '';
+                    if (slider.id === 'duration') suffix = 's';
+                    valueDisplay.textContent = value + suffix;
+                };
+                
+                slider.addEventListener('input', updateDisplay);
+                updateDisplay(); // Initial display
+            });
+        }
+        
+        // Add dynamic glow effects on cards
+        function setupCardGlow() {
+            document.addEventListener('mousemove', function(e) {
+                const cards = document.querySelectorAll('.prompt-section, .controls-panel');
+                cards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                        card.style.setProperty('--mouse-x', x + 'px');
+                        card.style.setProperty('--mouse-y', y + 'px');
+                        card.style.background = `
+                            radial-gradient(circle at var(--mouse-x) var(--mouse-y), 
+                            rgba(0, 212, 255, 0.05) 0%, 
+                            rgba(157, 0, 255, 0.02) 50%, 
+                            transparent 100%),
+                            rgba(255, 255, 255, 0.02)
+                        `;
+                    }
+                });
+            });
+            
+            document.addEventListener('mouseleave', function() { // Changed from cards to document for simplicity
+                const cards = document.querySelectorAll('.prompt-section, .controls-panel');
+                cards.forEach(card => {
+                    card.style.background = 'rgba(255, 255, 255, 0.02)';
+                });
+            });
+        }
+
+        // Placeholder behavior for prompt input
+        function setupPromptPlaceholder() {
+            const textarea = document.querySelector('.prompt-input');
+            if (!textarea) return;
+            const originalPlaceholder = textarea.placeholder;
+            
+            textarea.addEventListener('focus', function() { this.placeholder = ''; });
+            textarea.addEventListener('blur', function() {
+                if (this.value === '') this.placeholder = originalPlaceholder;
+            });
+        }
+
+        // Update UI for progress
+        function updateProgressUI(message, percentage, subtitle = "Neural networks are weaving reality...") {
+            progressText.textContent = message;
+            progressSubtitle.textContent = subtitle;
+            progressBarFill.style.width = `${Math.min(percentage, 100)}%`;
+        }
+
+        // Reset UI to initial state for new generation
+        function resetToGenesisState() {
+            mainInterface.style.display = 'grid';
+            progressSection.classList.remove('active');
+            resultsSection.classList.remove('active');
+            videoPreview.innerHTML = ''; // Clear previous video
+            videoPreview.appendChild(videoPlaceholder); // Add placeholder back
+            videoPlaceholder.style.display = 'block';
+            downloadBtn.style.display = 'none';
+            downloadBtn.href = '#';
+            shareBtn.style.display = 'none';
+            refineBtn.style.display = 'none';
+            generateBtn.disabled = false;
+            if (pollingInterval) clearInterval(pollingInterval);
+            currentJobId = null;
+        }
+
+        // Poll for job status
+        async function pollJobStatus(jobId) {
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/job/${jobId}/status`);
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error('Error fetching job status:', response.status, errorData.error);
+                        updateProgressUI(`Error: ${errorData.error || 'Could not fetch status.'}`, 0, "Please try again or contact support.");
+                        clearInterval(pollingInterval);
+                        generateBtn.disabled = false;
+                        return;
+                    }
+                    const statusData = await response.json();
+                    updateProgressUI(statusData.message || 'Processing...', statusData.progress || 0, statusData.error ? `Error: ${statusData.error}` : "Neural networks are working...");
+
+                    if (statusData.status === 'completed') {
+                        clearInterval(pollingInterval);
+                        progressSection.classList.remove('active');
+                        resultsSection.classList.add('active');
+                        videoPlaceholder.style.display = 'none';
+
+                        const videoElement = document.createElement('video');
+                        videoElement.src = statusData.videoUrl; // e.g., /api/download/jobId
+                        videoElement.controls = true;
+                        videoElement.autoplay = true;
+                        videoElement.loop = true; // Optional: loop the preview
+                        videoPreview.innerHTML = ''; // Clear placeholder
+                        videoPreview.appendChild(videoElement);
+
+                        downloadBtn.href = statusData.videoUrl;
+                        downloadBtn.style.display = 'inline-block';
+                        shareBtn.style.display = 'inline-block'; // Show other buttons
+                        refineBtn.style.display = 'inline-block';
+                        generateBtn.disabled = false; // Enable for new generation
+
+                    } else if (statusData.status === 'failed') {
+                        clearInterval(pollingInterval);
+                        updateProgressUI(`Failed: ${statusData.message || 'Unknown error'}`, statusData.progress || 0, "Please check your prompt or try different parameters.");
+                        // resultsSection.classList.remove('active'); // Keep progress visible with error
+                        // progressSection.classList.add('active');
+                        generateBtn.disabled = false;
+                    }
+                } catch (pollError) {
+                    console.error('Polling error:', pollError);
+                    updateProgressUI('Network error during polling.', 0, "Check your connection and try again.");
+                    clearInterval(pollingInterval);
+                    generateBtn.disabled = false;
+                }
+            }, 3000); // Poll every 3 seconds
+        }
+        
+        // Main function to trigger video generation
+        async function generateVideo() {
+            if (generateBtn.disabled) return;
+
+            const prompt = promptInput.value;
+            if (!prompt || prompt.trim().length < 10) {
+                alert("Please enter a descriptive prompt (at least 10 characters).");
+                return;
+            }
+
+            generateBtn.disabled = true; // Disable button during processing
+            mainInterface.style.display = 'none';
+            resultsSection.classList.remove('active'); // Hide previous results
+            progressSection.classList.add('active');
+            updateProgressUI('Initializing Genesis...', 0, "Preparing your request...");
+
+            // Clear previous video and show placeholder
+            videoPreview.innerHTML = '';
+            videoPreview.appendChild(videoPlaceholder);
+            videoPlaceholder.style.display = 'block';
+            downloadBtn.style.display = 'none';
+            shareBtn.style.display = 'none';
+            refineBtn.style.display = 'none';
+
+            const generationParams = {
+                prompt: prompt,
+                model: modelSelect.value,
+                duration: parseInt(durationSlider.value),
+                quality: qualitySelect.value,
+                styleIntensity: parseInt(intensitySlider.value),
+                frameRate: parseInt(frameRateSelect.value),
+                motionDynamics: parseInt(motionSlider.value)
+            };
+
+            try {
+                const response = await fetch('/api/generate/text-to-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(generationParams),
+                });
+
+                if (!response.ok) { // Handles 4xx, 5xx errors from backend explicitly
+                    const errorData = await response.json().catch(() => ({ error: "Unknown server error" })); // Graceful error parsing
+                    throw new Error(errorData.details ? errorData.details.join(', ') : errorData.error || `Server responded with ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentJobId = data.jobId;
+                updateProgressUI(data.message || 'Generation started...', 10, `Estimated time: ${data.estimatedTimeInSeconds || 'N/A'}s. Job ID: ${currentJobId}`);
+                pollJobStatus(currentJobId);
+
+            } catch (error) {
+                console.error('Generation initiation error:', error);
+                updateProgressUI(`Error: ${error.message}`, 0, "Could not start generation. Please try again.");
+                progressSection.classList.add('active'); // Keep progress section for error message
+                mainInterface.style.display = 'grid'; // Show controls again
+                generateBtn.disabled = false;
+            }
+        }
+        
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            setupSliders();
+            setupCardGlow();
+            setupPromptPlaceholder();
+            
+            generateBtn.addEventListener('click', generateVideo);
+            newGenesisBtn.addEventListener('click', resetToGenesisState);
+        });
+    </script>
+</body>
+</html>
