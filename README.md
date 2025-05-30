@@ -59,10 +59,10 @@ Currently, this project is configured to use **Fal AI's LTX Video model** for te
 
 1.  **Clone the Repository:**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/neural-video-genesis.git
+    git clone https://github.com/LeninKatta45/neural-video-genesis.git
     cd neural-video-genesis
     ```
-    *(Replace `YOUR_USERNAME` with your actual GitHub username.)*
+   
 
 2.  **Configure Backend Environment Variables:**
     *   Navigate to the `backend` directory:
